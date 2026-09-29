@@ -27,6 +27,7 @@
 #include "encoder.h"
 #include "mpu6050.h"
 #include "SEGGER_RTT.h"
+#include "uart_comms.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -68,11 +69,11 @@ const osThreadAttr_t motorControl_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityAboveNormal,
 };
-/* Definitions for microROS */
-osThreadId_t microROSHandle;
-const osThreadAttr_t microROS_attributes = {
-  .name = "microROS",
-  .stack_size = 128 * 4,
+/* Definitions for uartComms */
+osThreadId_t uartCommsHandle;
+const osThreadAttr_t uartComms_attributes = {
+  .name = "uartComms",
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal1,
 };
 /* Definitions for gyroTask */
@@ -102,7 +103,7 @@ static void MX_I2C1_Init(void);
 static void MX_USART3_UART_Init(void);
 void StartDefaultTask(void *argument);
 void motorControlFunc(void *argument);
-void microROSFunc(void *argument);
+void uartCommsFunc(void *argument);
 void gyroTaskFunc(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -186,7 +187,7 @@ int main(void)
   motorControlHandle = osThreadNew(motorControlFunc, NULL, &motorControl_attributes);
 
   /* creation of microROS */
-  microROSHandle = osThreadNew(microROSFunc, NULL, &microROS_attributes);
+  uartCommsHandle = osThreadNew(uartCommsFunc, NULL, &uartComms_attributes);
   /* creation of gyroTask */
   gyroTaskHandle = osThreadNew(gyroTaskFunc, NULL, &gyroTask_attributes);
 
@@ -647,22 +648,18 @@ void motorControlFunc(void *argument)
   /* USER CODE END motorControlFunc */
 }
 
-/* USER CODE BEGIN Header_microROSFunc */
+/* USER CODE BEGIN Header_uartCommsFunc */
 /**
-* @brief Function implementing the microROS thread.
+* @brief Function implementing the uartComms thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_microROSFunc */
-void microROSFunc(void *argument)
+/* USER CODE END Header_uartCommsFunc */
+void uartCommsFunc(void *argument)
 {
-  /* USER CODE BEGIN microROSFunc */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END microROSFunc */
+  /* USER CODE BEGIN uartCommsFunc */
+  uart_comms_task(argument);
+  /* USER CODE END uartCommsFunc */
 }
 
 /* USER CODE BEGIN Header_gyroTaskFunc */

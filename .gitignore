@@ -147,3 +147,7 @@ TAGS
 # own reference datasheets live in docs/datasheets/ and ARE tracked.
 *.pdf
 !docs/datasheets/*.pdf
+
+
+## Tesiing
+/SubsystemTesting
