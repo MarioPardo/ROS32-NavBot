@@ -1,0 +1,149 @@
+# ============================================================
+# ROS32Bot - git ignore rules
+# Track source only: ignore all build outputs, generated files,
+# IDE/cache state, and OS metadata.
+# ============================================================
+
+# ---------- ROS 2 (colcon) ----------
+# ROS_ws/build, ROS_ws/install, ROS_ws/log
+build/
+install/
+log/
+# Stray colcon/ament artifacts at workspace root, e.g. log/latest_build symlinks
+log/latest*
+# CMake / ament leftovers
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile
+*.cmake.stamp
+ament_prefix_hooks/
+COLCON_IGNORE
+.colcon_install
+
+# ---------- STM32CubeIDE / Eclipse / CDT ----------
+# Per-project build output (STM32/ros32bot_stm32/Debug, SubsystemTesting/**/Debug,
+# includes the node_modules bundled inside FreeRTOS_Test/Debug)
+Debug/
+Release/
+.metadata/
+.cache/
+.settings/org.eclipse.cdt.*
+
+# ---------- CubeMX-vendored code (regenerated, not authored) ----------
+# STM32CubeIDE copies the HAL / CMSIS / DSP / FreeRTOS trees in from the .ioc
+# on every "Generate Code". ~67 MB of duplicated vendor code across the six
+# projects, so it is deliberately NOT tracked.
+# To rebuild after a fresh clone: open each *.ioc in STM32CubeIDE and press
+# "Generate Code" (needs the matching STM32 firmware package installed).
+# NOTE: Core/ and the .ioc/.cproject/.project files ARE tracked - that is the
+# real source of truth.
+Drivers/
+Middlewares/
+
+# ---------- STM32 / embedded build artifacts ----------
+*.o
+*.obj
+*.d
+*.a
+*.la
+*.lo
+*.elf
+*.bin
+*.hex
+*.srec
+*.map
+*.su
+*.lst
+*.list
+*.sym
+*.i
+*.dmp
+# NOTE: do NOT ignore *.s - STM32CubeIDE startup files (startup_*.s) are real
+# sources and must stay tracked. Compiler-generated asm goes in Debug/ anyway.
+# CubeIDE-generated make fragments (normally inside Debug/ already)
+*.mk
+*.gcno
+*.gcda
+*.gcov
+
+# ---------- C/C++ general ----------
+*.out
+*.exe
+*.dll
+*.so
+*.so.*
+*.dylib
+*.lib
+*.gch
+
+# ---------- Python (ROS 2 nodes, tooling) ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+venv/
+.venv/
+env/
+
+# ---------- Node / JS tooling ----------
+node_modules/
+npm-debug.log*
+yarn-error.log*
+package-lock.json.tmp
+.pnpm-store/
+
+# ---------- PlatformIO (if a board config is added later) ----------
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# ---------- Editors ----------
+.vscode/
+!.vscode/*.code-snippets
+.idea/
+*.swp
+*.swo
+*.sw?
+*~
+\#*\#
+.\#*
+
+# ---------- OS cruft ----------
+.DS_Store
+._*
+Thumbs.db
+desktop.ini
+
+# ---------- Local-only / secrets ----------
+.env
+.env.local
+*.local
+*.bak
+*.orig
+*.rej
+*.tmp
+*.log
+
+# ---------- Misc generated ----------
+# Doxygen output only. Do NOT ignore a bare "html/" or "latex/" - the vendored
+# CMSIS drivers ship Documentation/**/html that must stay tracked.
+docs/doxygen/
+compile_commands.json
+tags
+TAGS
+.cproject.bak
+
+# ---------- Datasheets / docs ----------
+# Vendor datasheets are recreatable, so ignore them by default. The project's
+# own reference datasheets live in docs/datasheets/ and ARE tracked.
+*.pdf
+!docs/datasheets/*.pdf
