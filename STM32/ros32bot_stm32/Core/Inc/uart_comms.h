@@ -15,8 +15,11 @@
 #define UART_CRC_BYTES    2U
 #define UART_MAX_PAYLOAD  32U
 
+/* Wheel speeds on the wire are centirad/s: value / 100 = rad/s. */
+#define WHEEL_VEL_CRAD_PER_RAD 100.0f
+
 /* Pi -> STM32
-   0x01 SET_WHEEL_VEL   int16 left_mm_s, int16 right_mm_s
+   0x01 SET_WHEEL_VEL   int16 left_crad_s, int16 right_crad_s
    0x03 SET_ENABLE      uint8 enabled
 */
 #define MSG_SET_WHEEL_VEL  0x01U

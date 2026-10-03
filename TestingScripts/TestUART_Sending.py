@@ -22,7 +22,7 @@ SYNC_1 = 0x5A
 # Must match uart_comms.h
 MSG_SET_WHEEL_VEL = 0x01
 
-DEFAULT_PORT = "/dev/serial0"
+DEFAULT_PORT = "/dev/ttyAMA0"
 BAUD_RATE = 115200
 PERIOD_S = 1.0
 
@@ -30,11 +30,11 @@ seq = 0
 
 
 def preset_message():
-    """Edit me: the wheel targets sent by the test, in mm/s."""
-    left_mm_s = 100
-    right_mm_s = 100
+    """Edit me: the wheel targets sent by the test, in centirad/s (100 = 1 rad/s)."""
+    left_crad_s = 100
+    right_crad_s = 100
 
-    return left_mm_s, right_mm_s
+    return left_crad_s, right_crad_s
 
 
 # CCITT-FALSE. Same polynomial and seed as the STM32 side.
@@ -68,8 +68,8 @@ def make_frame(msg_id, payload):
     return bytes([SYNC_0, SYNC_1]) + body + crc16_ccitt(body).to_bytes(2, "little")
 
 
-def package_wheel_velocities(left_mm_s, right_mm_s):
-    payload = int16(left_mm_s) + int16(right_mm_s)
+def package_wheel_velocities(left_crad_s, right_crad_s):
+    payload = int16(left_crad_s) + int16(right_crad_s)
 
     return make_frame(MSG_SET_WHEEL_VEL, payload)
 
@@ -82,11 +82,11 @@ def main():
     with serial.Serial(port, BAUD_RATE, timeout=1) as uart:
         try:
             while True:
-                left_mm_s, right_mm_s = preset_message()
-                frame = package_wheel_velocities(left_mm_s, right_mm_s)
+                left_crad_s, right_crad_s = preset_message()
+                frame = package_wheel_velocities(left_crad_s, right_crad_s)
 
                 uart.write(frame)
-                print(f"sent L={left_mm_s} R={right_mm_s} mm/s: {frame.hex(' ')}")
+                print(f"sent L={left_crad_s} R={right_crad_s} crad/s: {frame.hex(' ')}")
 
                 time.sleep(PERIOD_S)
         except KeyboardInterrupt:

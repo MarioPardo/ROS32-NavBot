@@ -10,6 +10,9 @@ typedef enum
   ENCODER_COUNT
 } encoder_id_t;
 
+/* 11 pulse/rev through the 35:1 gearbox, counted x4 by the quadrature decoder. */
+#define ENCODER_COUNTS_PER_REV 1540
+
 void encoder_init(void);
 
 /* Sample both encoders. Call from a fixed-rate loop; dt_ms is that period. */

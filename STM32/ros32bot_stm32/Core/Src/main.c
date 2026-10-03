@@ -28,6 +28,7 @@
 #include "mpu6050.h"
 #include "SEGGER_RTT.h"
 #include "uart_comms.h"
+#include "wheel_control.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,10 +58,14 @@ UART_HandleTypeDef huart3;
 
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
+/* Priority must stay ABOVE gyroTask (osPriorityLow7): gyroTask calls
+   HAL_I2C_Mem_Read() with a 100 ms blocking timeout every 5 ms period, so a
+   missing or wedged MPU6050 busy-waits the CPU and starves anything below it.
+   The logger lives here, so it has to outrank the gyro or the log goes silent. */
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
-  .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for motorControl */
 osThreadId_t motorControlHandle;
@@ -157,6 +162,7 @@ int main(void)
 
   motor_init();
   encoder_init();
+  wheel_control_init();
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -186,8 +192,9 @@ int main(void)
   /* creation of motorControl */
   motorControlHandle = osThreadNew(motorControlFunc, NULL, &motorControl_attributes);
 
-  /* creation of microROS */
+  /* creation of uartComms */
   uartCommsHandle = osThreadNew(uartCommsFunc, NULL, &uartComms_attributes);
+
   /* creation of gyroTask */
   gyroTaskHandle = osThreadNew(gyroTaskFunc, NULL, &gyroTask_attributes);
 
@@ -317,7 +324,7 @@ static void MX_TIM1_Init(void)
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC1Filter = 0;
+  sConfig.IC1Filter = 10;
   sConfig.IC2Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
@@ -594,28 +601,23 @@ int _write(int file, char *ptr, int len)
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
-  imu_sample_t imu;
+  wheel_state_t left;
+  wheel_state_t right;
 
   /* Infinite loop */
   for(;;)
   {
-    printf("enc  L pos=%6ld vel=%6ld dir=%2d  |  R pos=%6ld vel=%6ld dir=%2d\r\n",
-           (long)encoder_get_position(ENCODER_LEFT),
-           (long)encoder_get_velocity(ENCODER_LEFT),
-           (int)encoder_get_dir(ENCODER_LEFT),
-           (long)encoder_get_position(ENCODER_RIGHT),
-           (long)encoder_get_velocity(ENCODER_RIGHT),
-           (int)encoder_get_dir(ENCODER_RIGHT));
+    wheel_control_get_state(MOTOR_LEFT, &left);
+    wheel_control_get_state(MOTOR_RIGHT, &right);
 
-    if (mpu6050_get(&imu))
-    {
-      printf("imu  seq=%5lu t=%6lums  acc[mg]=%6ld %6ld %6ld  gyr[mdps]=%7ld %7ld %7ld  T=%ldmc\r\n",
-             (unsigned long)imu.seq,
-             (unsigned long)imu.tick_ms,
-             (long)imu.accel_mg[IMU_X], (long)imu.accel_mg[IMU_Y], (long)imu.accel_mg[IMU_Z],
-             (long)imu.gyro_mdps[IMU_X], (long)imu.gyro_mdps[IMU_Y], (long)imu.gyro_mdps[IMU_Z],
-             (long)imu.temp_mc);
-    }
+    printf("whl  L tgt=%6ld meas=%6ld duty=%5d  |  R tgt=%6ld meas=%6ld duty=%5d  [crad/s, permille]\r\n",
+           (long)(left.target * WHEEL_VEL_CRAD_PER_RAD),
+           (long)(left.meas * WHEEL_VEL_CRAD_PER_RAD),
+           (int)left.duty,
+           (long)(right.target * WHEEL_VEL_CRAD_PER_RAD),
+           (long)(right.meas * WHEEL_VEL_CRAD_PER_RAD),
+           (int)right.duty);
+
 
     osDelay(100);
   }
@@ -632,15 +634,14 @@ void StartDefaultTask(void *argument)
 void motorControlFunc(void *argument)
 {
   /* USER CODE BEGIN motorControlFunc */
-  const uint32_t period = 10U;
+  /* The Arduino's loop rate, so those PID gains carry over as tuned. */
+  const uint32_t period = 100U;
   uint32_t wake = osKernelGetTickCount();
 
   for(;;)
   {
-    motor_set_duty(MOTOR_LEFT, 500);
-    motor_set_duty(MOTOR_RIGHT, 500);
-
     encoder_update(period);
+    wheel_control_update(period);
 
     wake += period;
     osDelayUntil(wake);

@@ -41,27 +41,27 @@ void motor_init(void)
   }
 }
 
-void motor_set_duty(motor_id_t motor, int16_t permille)
+void motor_set_duty(motor_id_t motor, int16_t duty)
 {
   if ((unsigned)motor >= (unsigned)MOTOR_COUNT)
   {
     return;
   }
 
-  if (permille > MOTOR_DUTY_MAX)
+  if (duty > MOTOR_DUTY_MAX)
   {
-    permille = MOTOR_DUTY_MAX;
+    duty = MOTOR_DUTY_MAX;
   }
-  else if (permille < -MOTOR_DUTY_MAX)
+  else if (duty < -MOTOR_DUTY_MAX)
   {
-    permille = -MOTOR_DUTY_MAX;
+    duty = -MOTOR_DUTY_MAX;
   }
 
   const motor_hw_t *hw = &motors[motor];
 
   __HAL_TIM_SET_COMPARE(hw->htim, hw->channel, 0U);
-  motor_write_direction(hw, permille);
-  __HAL_TIM_SET_COMPARE(hw->htim, hw->channel, motor_duty_to_ccr(hw, (permille < 0) ? -permille : permille));
+  motor_write_direction(hw, duty);
+  __HAL_TIM_SET_COMPARE(hw->htim, hw->channel, motor_duty_to_ccr(hw, (duty < 0) ? -duty : duty));
 }
 
 void motor_stop_all(void)

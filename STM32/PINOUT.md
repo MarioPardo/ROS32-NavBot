@@ -6,7 +6,7 @@
     DIR_A : PB4  Brown
     DIR_B : PB5  Red
 
-    ### Left Encoder TIM4_CH1
+    ### Left Encoder : TIM1_CH1,2
     ENC A: PA8
     ENC B: PA9
 

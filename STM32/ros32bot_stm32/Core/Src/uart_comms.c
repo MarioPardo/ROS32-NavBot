@@ -6,6 +6,7 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "SEGGER_RTT.h"
+#include "wheel_control.h"
 
 extern UART_HandleTypeDef huart3;
 
@@ -80,7 +81,7 @@ static void parse_drop(uint16_t n)
 
 ///// Deliver ///////
 
-/* 0x01: wheel velocity targets in mm/s. */
+/* 0x01: wheel velocity targets in centirad/s. */
 static void deliver_wheel_vel(const uint8_t *payload, uint8_t len)
 {
   if (len != 4U)
@@ -91,10 +92,10 @@ static void deliver_wheel_vel(const uint8_t *payload, uint8_t len)
   int16_t left  = read_i16(payload);
   int16_t right = read_i16(payload + 2U);
 
-  /* TODO: hand these to the motor PI loop, once it exists.
-     motor_set_velocity(MOTOR_LEFT, left);
-     motor_set_velocity(MOTOR_RIGHT, right); */
-  SEGGER_RTT_printf(0, "cmd  wheel_vel  L=%d R=%d mm/s\r\n", left, right);
+  wheel_control_set_target(MOTOR_LEFT, (float)left / WHEEL_VEL_CRAD_PER_RAD);
+  wheel_control_set_target(MOTOR_RIGHT, (float)right / WHEEL_VEL_CRAD_PER_RAD);
+
+  SEGGER_RTT_printf(0, "cmd  wheel_vel  L=%d R=%d crad/s\r\n", left, right);
 }
 
 /* 0x03: global enable. */
@@ -104,6 +105,8 @@ static void deliver_enable(const uint8_t *payload, uint8_t len)
   {
     return;
   }
+
+  wheel_control_set_enabled(payload[0]);
 
   SEGGER_RTT_printf(0, "cmd  enable %u\r\n", (unsigned)payload[0]);
 }
