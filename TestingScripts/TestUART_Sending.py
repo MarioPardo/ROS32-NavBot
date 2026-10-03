@@ -8,7 +8,7 @@ check that the STM32 receives and parses frames (watch SEGGER RTT).
 Usage:
     python3 TestUART_Sending.py [port]
 
-Defaults to /dev/serial0 at 115200 8N1, the link the middleware opens.
+Defaults to /dev/ttyAMA0 at 115200 8N1, the link the middleware opens.
 """
 
 import sys

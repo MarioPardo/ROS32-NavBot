@@ -1,0 +1,11 @@
+<library path="ros32bot_middleware">
+    <class name="ros32bot_middleware/Ros32BotInterface"
+        type="ros32bot_middleware::Ros32BotInterface"
+        base_class_type="hardware_interface::SystemInterface">
+
+        <description>
+            Ros32Bot Hardware Interface
+        </description>
+
+    </class>
+</library>

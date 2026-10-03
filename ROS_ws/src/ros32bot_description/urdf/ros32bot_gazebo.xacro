@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+
+<robot name="ros32bot" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <gazebo reference="wheel_right_link">
+        <mu1>100000000000000.0</mu1>
+        <mu2>100000000000000.0</mu2>
+        <kp>1000000000000.0</kp>
+        <kd>10</kd>
+        <minDepth>0.001</minDepth>
+        <maxVel>0.1</maxVel>
+        <fdir1>1 0 0</fdir1>
+    </gazebo>
+
+    <gazebo reference="wheel_left_link">
+        <mu1>100000000000000.0</mu1>
+        <mu2>100000000000000.0</mu2>
+        <kp>1000000000000.0</kp>
+        <kd>10</kd>
+        <minDepth>0.001</minDepth>
+        <maxVel>0.1</maxVel>
+        <fdir1>1 0 0</fdir1>
+    </gazebo>
+
+    <gazebo reference="caster_front_link">
+        <mu1>0.1</mu1>
+        <mu2>0.1</mu2>
+        <kp>1000000.0</kp>
+        <kd>100</kd>
+        <minDepth>0.001</minDepth>
+        <maxVel>0.1</maxVel>
+    </gazebo>
+
+    <gazebo reference="caster_rear_link">
+        <mu1>0.1</mu1>
+        <mu2>0.1</mu2>
+        <kp>1000000.0</kp>
+        <kd>100</kd>
+        <minDepth>0.001</minDepth>
+        <maxVel>0.1</maxVel>
+    </gazebo>
+
+    <gazebo> 
+        <xacro:if value="$(arg is_ignition)"> <!-- ROS2 Humble-->
+            <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
+                <parameters>$(find ros32bot_controller)/config/ros32bot_controllers.yaml</parameters>
+            </plugin>
+            <plugin filename="ignition-gazebo-imu-system" name="ignition::gazebo::system::Imu">
+
+            </plugin>
+        </xacro:if>
+
+        <xacro:unless value="$(arg is_ignition)">
+            <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+                <parameters>$(find ros32bot_controller)/config/ros32bot_controllers.yaml</parameters>
+            </plugin>
+            <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu">
+            </plugin>
+        </xacro:unless>
+    </gazebo>
+
+    <!-- Configure IMU-->
+    <gazebo reference="imu_link">
+        <sensor name="imu" type="imu">
+            <always_on>true</always_on>
+            <update_rate>100</update_rate>
+            <gz_frame_id>imu_link</gz_frame_id>
+            <topic>imu</topic>
+            <imu>
+                <angular_velocity>
+                    <x>
+                        <noise type="gaussian"></noise>
+                        <mean>0.0</mean>
+                        <stddev>2e-4</stddev>
+                    </x>
+                    <y>
+                        <noise type="gaussian"></noise>
+                        <mean>0.0</mean>
+                        <stddev>2e-4</stddev>
+                    </y>
+                    <z>
+                        <noise type="gaussian"></noise>
+                        <mean>0.0</mean>
+                        <stddev>2e-4</stddev>
+                    </z>
+                </angular_velocity>
+            
+                <linear_acceleration>
+                <x type="gaussian">
+                    <mean>0.0</mean>
+                    <stddev>1.7e-2</stddev>
+                </x>
+                <y>
+                    <mean>0.0</mean>
+                    <stddev>1.7e-2</stddev>
+                </y>
+                <z>
+                    <mean>0.0</mean>
+                    <stddev>1.7e-2</stddev>
+                </z>
+
+                </linear_acceleration>
+            </imu>
+        </sensor>
+        
+    </gazebo>
+
+
+</robot>
